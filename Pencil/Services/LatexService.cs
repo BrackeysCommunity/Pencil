@@ -1,0 +1,101 @@
+﻿using System;
+using System.IO;
+using CSharpMath.SkiaSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
+
+namespace Pencil.Services;
+
+internal sealed class LatexService
+{
+    /// <summary>
+    ///     Gets or sets the padding around a rendered latex image.
+    /// </summary>
+    /// <value>The padding.</value>
+    public int Padding { get; set; } = 20;
+
+    /// <summary>
+    ///     Renders a LaTeX string to an image.
+    /// </summary>
+    /// <param name="input">The LaTeX string to render.</param>
+    /// <returns>An instance of <see cref="RenderResult" /> containing the result of the operation.</returns>
+    public RenderResult Render(string input)
+    {
+        var painter = new MathPainter
+        {
+            LaTeX = input,
+            FontSize = 25f,
+            DisplayErrorInline = false,
+            TextColor = SKColors.White
+        };
+
+        Stream? stream = painter.DrawAsStream(format: SKEncodedImageFormat.Png);
+        if (stream is null)
+            return new RenderResult(null, false, painter.ErrorMessage);
+
+        using Image sourceImage = Image.Load(stream);
+
+        using var image = new Image<Rgba32>(sourceImage.Width + Padding, sourceImage.Height + Padding);
+        image.Mutate(ctx =>
+        {
+            int halfPadding = Padding / 2;
+            ctx.Fill(Color.FromRgb(0x36, 0x39, 0x3f)); // discord grey
+
+            // ReSharper disable once AccessToDisposedClosure
+            ctx.DrawImage(sourceImage, new Point(halfPadding, halfPadding), 1f);
+        });
+
+        var buffer = new MemoryStream();
+        image.Save(buffer, new PngEncoder {CompressionLevel = 0});
+        buffer.Position = 0; // reset head for D#+
+
+        return new RenderResult(buffer, true, null);
+    }
+
+    /// <summary>
+    ///     Represents the result of a call to <see cref="LatexService.Render" />.
+    /// </summary>
+    public readonly struct RenderResult : IDisposable
+    {
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="RenderResult" /> struct.
+        /// </summary>
+        /// <param name="imageStream">The image stream.</param>
+        /// <param name="success">A value indicating whether the render was successful.</param>
+        /// <param name="errorMessage">The associated error message, if any.</param>
+        public RenderResult(Stream? imageStream, bool success, string? errorMessage)
+        {
+            ImageStream = imageStream;
+            Success = success;
+            ErrorMessage = errorMessage;
+        }
+
+        /// <summary>
+        ///     Gets the associated error message if <see cref="Success" /> is <see langword="false" />.
+        /// </summary>
+        /// <value>The error message, or <see langword="null" /> if the render was successful.</value>
+        public string? ErrorMessage { get; }
+
+        /// <summary>
+        ///     Gets the rendered image.
+        /// </summary>
+        /// <value>The rendered image.</value>
+        public Stream? ImageStream { get; }
+
+        /// <summary>
+        ///     Gets a value indicating whether the result was successful.
+        /// </summary>
+        /// <value><see langword="true" /> if the result was successful; otherwise, <see langword="false" />.</value>
+        public bool Success { get; }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            ImageStream?.Dispose();
+        }
+    }
+}
