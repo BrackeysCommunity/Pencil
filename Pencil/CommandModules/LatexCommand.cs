@@ -4,24 +4,23 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using Hawkeye.API;
 using Pencil.Services;
 
 namespace Pencil.CommandModules;
 
 internal sealed class LatexCommand : BaseCommandModule
 {
-    private readonly IHawkeye _hawkeye;
+    private readonly HawkeyeAdapter _hawkeyeAdapter;
     private readonly LatexService _latexService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LatexCommand" /> class.
     /// </summary>
-    /// <param name="hawkeye">The Hawkeye plugin instance.</param>
+    /// <param name="hawkeyeAdapter">The Hawkeye plugin adapter.</param>
     /// <param name="latexService">The LaTeX rendering service.</param>
-    public LatexCommand(IHawkeye hawkeye, LatexService latexService)
+    public LatexCommand(HawkeyeAdapter hawkeyeAdapter, LatexService latexService)
     {
-        _hawkeye = hawkeye;
+        _hawkeyeAdapter = hawkeyeAdapter;
         _latexService = latexService;
     }
 
@@ -32,7 +31,7 @@ internal sealed class LatexCommand : BaseCommandModule
         [Description("The expression to render."), RemainingText]
         string expression)
     {
-        if (_hawkeye.ContainsFilteredExpression(expression))
+        if (_hawkeyeAdapter.ContainsFilteredExpression(expression))
         {
             // do not render filtered expressions
             _ = context.Message.CreateReactionAsync(DiscordEmoji.FromUnicode("🛑"));

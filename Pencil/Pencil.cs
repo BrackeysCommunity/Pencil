@@ -4,21 +4,23 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
-using Hawkeye.API;
 using Microsoft.Extensions.DependencyInjection;
 using Pencil.CommandModules;
 using Pencil.Services;
 
 namespace Pencil;
 
+/// <summary>
+///     Represents a class which implements the Pencil plugin.
+/// </summary>
 [Plugin("Pencil")]
 [PluginDescription("A plugin for rendering LaTeX expressions.")]
-public class Pencil : MonoPlugin
+public sealed class Pencil : MonoPlugin
 {
     /// <inheritdoc />
     protected override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(PluginManager.GetPlugin<IHawkeye>()!);
+        services.AddSingleton<HawkeyeAdapter>();
         services.AddSingleton<LatexService>();
 
         base.ConfigureServices(services);

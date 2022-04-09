@@ -3,24 +3,23 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using Hawkeye.API;
 using Pencil.Services;
 
 namespace Pencil.CommandModules;
 
 internal sealed class LatexApplicationCommand : ApplicationCommandModule
 {
-    private readonly IHawkeye _hawkeye;
+    private readonly HawkeyeAdapter _hawkeyeAdapter;
     private readonly LatexService _latexService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="LatexApplicationCommand" /> class.
     /// </summary>
-    /// <param name="hawkeye">The Hawkeye plugin instance.</param>
+    /// <param name="hawkeyeAdapter">The Hawkeye plugin adapter.</param>
     /// <param name="latexService">The LaTeX rendering service.</param>
-    public LatexApplicationCommand(IHawkeye hawkeye, LatexService latexService)
+    public LatexApplicationCommand(HawkeyeAdapter hawkeyeAdapter, LatexService latexService)
     {
-        _hawkeye = hawkeye;
+        _hawkeyeAdapter = hawkeyeAdapter;
         _latexService = latexService;
     }
 
@@ -34,10 +33,8 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
             return;
         }
 
-        if (_hawkeye.ContainsFilteredExpression(message.Content))
+        if (_hawkeyeAdapter.ContainsFilteredExpression(message.Content))
         {
-            // this shouldn't ever execute, as a filtered message is automatically removed by Hawkeye.
-            // but in the event that a bypassing role sent the message (e.g. Admin), we'll still halt the render.
             _ = context.CreateResponseAsync("This message contains a filtered expression.", true);
             return;
         }
@@ -65,7 +62,7 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         [Option("expression", "The expression to render")]
         string expression)
     {
-        if (_hawkeye.ContainsFilteredExpression(expression))
+        if (_hawkeyeAdapter.ContainsFilteredExpression(expression))
         {
             // do not render filtered expressions
             _ = context.CreateResponseAsync("This input contains a filtered expression.", true);
