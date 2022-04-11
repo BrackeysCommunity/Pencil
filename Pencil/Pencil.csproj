@@ -26,7 +26,6 @@
 
     <ItemGroup>
         <PackageReference Include="BrackeysBot.API" Version="4.0.0-nightly.16"/>
-        <PackageReference Include="BrackeysBot.Core.API" Version="1.0.0-nightly.4"/>
         <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1"/>
         <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0"/>
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14"/>
