@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using BrackeysBot.API.Plugins;
 using NLog;
 
@@ -15,7 +14,6 @@ internal sealed class HawkeyeAdapter
 {
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
     private readonly IPluginManager _pluginManager;
-    private readonly Predicate<string> _filteredExpressionValidationPredicate = _ => false;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="HawkeyeAdapter" /> class.
