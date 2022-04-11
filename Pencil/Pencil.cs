@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using BrackeysBot.API.Plugins;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,12 +28,7 @@ public sealed class Pencil : MonoPlugin
     /// <inheritdoc />
     protected override Task OnLoad()
     {
-        Logger.Info("Registering command modules");
-        CommandsNextExtension commandsNext = DiscordClient.GetCommandsNext();
-        commandsNext.RegisterCommands<LatexCommand>();
-
         DiscordClient.GuildAvailable += DiscordClientOnGuildAvailable;
-
         return base.OnLoad();
     }
 
