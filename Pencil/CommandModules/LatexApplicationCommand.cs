@@ -23,8 +23,8 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         _latexService = latexService;
     }
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Render LaTeX")]
-    public async Task RenderMessageAsync(ContextMenuContext context)
+    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Render TeX")]
+    public async Task RenderTexAsync(ContextMenuContext context)
     {
         DiscordMessage? message = context.Interaction.Data.Resolved.Messages.FirstOrDefault().Value;
         if (string.IsNullOrWhiteSpace(message?.Content))
@@ -44,7 +44,7 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         {
             var embed = new DiscordEmbedBuilder();
             embed.WithColor(DiscordColor.Red);
-            embed.WithTitle("Error displaying LaTeX");
+            embed.WithTitle("Error displaying TeX");
             embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
 
             _ = context.CreateResponseAsync(embed, true);
@@ -57,10 +57,12 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         await context.CreateResponseAsync(builder);
     }
 
-    [SlashCommand("LaTeX", "Renders a LaTeX expression.")]
-    public async Task LatexCommandAsync(InteractionContext context,
+    [SlashCommand("tex", "Renders a TeX expression.")]
+    public async Task TexCommandAsync(InteractionContext context,
         [Option("expression", "The expression to render")]
-        string expression)
+        string expression,
+        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")]
+        bool spoiler = false)
     {
         if (_hawkeyeAdapter.ContainsFilteredExpression(expression))
         {
@@ -75,7 +77,7 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         {
             var embed = new DiscordEmbedBuilder();
             embed.WithColor(DiscordColor.Red);
-            embed.WithTitle("Error displaying LaTeX");
+            embed.WithTitle("Error displaying TeX");
             embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
 
             _ = context.CreateResponseAsync(embed, true);
@@ -83,7 +85,7 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         }
 
         var builder = new DiscordInteractionResponseBuilder();
-        builder.AddFile("output.png", result.ImageStream);
+        builder.AddFile($"{(spoiler ? "SPOILER_" : "")}output.png", result.ImageStream);
         await context.CreateResponseAsync(builder);
     }
 }

@@ -1,6 +1,8 @@
+﻿using System;
 using System.Threading.Tasks;
 using BrackeysBot.API.Plugins;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,11 +34,13 @@ public sealed class Pencil : MonoPlugin
         return base.OnLoad();
     }
 
-    private Task DiscordClientOnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
+    private async Task DiscordClientOnGuildAvailable(DiscordClient sender, GuildCreateEventArgs e)
     {
+        await sender.BulkOverwriteGuildApplicationCommandsAsync(e.Guild.Id, ArraySegment<DiscordApplicationCommand>.Empty);
+
         Logger.Info($"Registering slash commands for {e.Guild}");
         SlashCommandsExtension slashCommands = DiscordClient.GetSlashCommands();
         slashCommands.RegisterCommands<LatexApplicationCommand>(e.Guild.Id);
-        return slashCommands.RefreshCommands();
+        await slashCommands.RefreshCommands();
     }
 }
