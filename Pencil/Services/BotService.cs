@@ -54,6 +54,7 @@ internal sealed class BotService : BackgroundService
         });
 
         Logger.Info("Registering commands...");
+        slashCommands.RegisterCommands<FormatCodeCommand>();
         slashCommands.RegisterCommands<TexCommand>();
 
         Logger.Info("Connecting to Discord...");
