@@ -1,25 +1,23 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Pencil.Services;
 
 namespace Pencil.CommandModules;
 
-internal sealed class LatexApplicationCommand : ApplicationCommandModule
+/// <summary>
+///     Represents a class which implements the <c>Render TeX</c> command and <c>/tex</c> slash command.
+/// </summary>
+internal sealed class TexCommand : ApplicationCommandModule
 {
-    private readonly HawkeyeAdapter _hawkeyeAdapter;
     private readonly LatexService _latexService;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="LatexApplicationCommand" /> class.
+    ///     Initializes a new instance of the <see cref="TexCommand" /> class.
     /// </summary>
-    /// <param name="hawkeyeAdapter">The Hawkeye plugin adapter.</param>
     /// <param name="latexService">The LaTeX rendering service.</param>
-    public LatexApplicationCommand(HawkeyeAdapter hawkeyeAdapter, LatexService latexService)
+    public TexCommand(LatexService latexService)
     {
-        _hawkeyeAdapter = hawkeyeAdapter;
         _latexService = latexService;
     }
 
@@ -30,12 +28,6 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
         if (string.IsNullOrWhiteSpace(message?.Content))
         {
             _ = context.CreateResponseAsync("This message does not contain any content.", true);
-            return;
-        }
-
-        if (_hawkeyeAdapter.ContainsFilteredExpression(message.Content))
-        {
-            _ = context.CreateResponseAsync("This message contains a filtered expression.", true);
             return;
         }
 
@@ -59,18 +51,9 @@ internal sealed class LatexApplicationCommand : ApplicationCommandModule
 
     [SlashCommand("tex", "Renders a TeX expression.")]
     public async Task TexCommandAsync(InteractionContext context,
-        [Option("expression", "The expression to render")]
-        string expression,
-        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")]
-        bool spoiler = false)
+        [Option("expression", "The expression to render")] string expression,
+        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
-        if (_hawkeyeAdapter.ContainsFilteredExpression(expression))
-        {
-            // do not render filtered expressions
-            _ = context.CreateResponseAsync("This input contains a filtered expression.", true);
-            return;
-        }
-
         using LatexService.RenderResult result = _latexService.Render(expression);
 
         if (!result.Success)

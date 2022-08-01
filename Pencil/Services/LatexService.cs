@@ -1,12 +1,12 @@
-﻿using System;
-using System.IO;
-using CSharpMath.SkiaSharp;
+﻿using CSharpMath.SkiaSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SkiaSharp;
+using Color = SixLabors.ImageSharp.Color;
+using Point = SixLabors.ImageSharp.Point;
 
 namespace Pencil.Services;
 
