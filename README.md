@@ -1,5 +1,5 @@
 <h1 align="center">Pencil</h1>
-<p align="center"><i>A Discord bot for rendering LaTeX expressions.</i></p>
+<p align="center"><i>A Discord bot for rendering TeX expressions.</i></p>
 <p align="center">
 <a href="https://github.com/BrackeysBot/Pencil/releases"><img src="https://img.shields.io/github/v/release/BrackeysBot/Pencil?include_prereleases"></a>
 <a href="https://github.com/BrackeysBot/Pencil/actions?query=workflow%3A%22.NET%22"><img src="https://img.shields.io/github/workflow/status/BrackeysBot/Pencil/.NET" alt="GitHub Workflow Status" title="GitHub Workflow Status"></a>
@@ -8,7 +8,7 @@
 </p>
 
 ## About
-Pencil is a Discord bot which introduces commands to render LaTeX expressions and format code into codeblocks. 
+Pencil is a Discord bot which introduces commands to render TeX expressions and format code into codeblocks. 
 
 ## Contributing
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
