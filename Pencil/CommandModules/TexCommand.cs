@@ -1,6 +1,8 @@
-﻿using DSharpPlus;
+﻿using System.Text.RegularExpressions;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using Pencil.Configuration;
 using Pencil.Services;
 
 namespace Pencil.CommandModules;
@@ -10,14 +12,17 @@ namespace Pencil.CommandModules;
 /// </summary>
 internal sealed class TexCommand : ApplicationCommandModule
 {
+    private readonly ConfigurationService _configurationService;
     private readonly LatexService _latexService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="TexCommand" /> class.
     /// </summary>
+    /// <param name="configurationService">The configuration service.</param>
     /// <param name="latexService">The LaTeX rendering service.</param>
-    public TexCommand(LatexService latexService)
+    public TexCommand(ConfigurationService configurationService, LatexService latexService)
     {
+        _configurationService = configurationService;
         _latexService = latexService;
     }
 
@@ -39,14 +44,14 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
 
-            _ = context.CreateResponseAsync(embed, true);
+            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
             return;
         }
 
         var builder = new DiscordInteractionResponseBuilder();
         builder.AsEphemeral();
         builder.AddFile("output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder);
+        await context.CreateResponseAsync(builder).ConfigureAwait(false);
     }
 
     [SlashCommand("tex", "Renders a TeX expression.")]
@@ -54,6 +59,19 @@ internal sealed class TexCommand : ApplicationCommandModule
         [Option("expression", "The expression to render")] string expression,
         [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
+        if (context.Guild is { } guild &&
+            _configurationService.TryGetGuildConfiguration(guild, out GuildConfiguration? guildConfiguration))
+        {
+            foreach (string pattern in guildConfiguration.FilteredRegexes)
+            {
+                if (Regex.IsMatch(expression, pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                {
+                    await context.CreateResponseAsync("The expression contains a filtered word.", true).ConfigureAwait(false);
+                    return;
+                }
+            }
+        }
+
         using LatexService.RenderResult result = _latexService.Render(expression);
 
         if (!result.Success)
@@ -63,12 +81,12 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
 
-            _ = context.CreateResponseAsync(embed, true);
+            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
             return;
         }
 
         var builder = new DiscordInteractionResponseBuilder();
         builder.AddFile($"{(spoiler ? "SPOILER_" : "")}output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder);
+        await context.CreateResponseAsync(builder).ConfigureAwait(false);
     }
 }

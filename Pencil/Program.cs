@@ -27,6 +27,7 @@ await Host.CreateDefaultBuilder(args)
 
         services.AddHostedSingleton<LoggingService>();
         services.AddSingleton<LatexService>();
+        services.AddSingleton<ConfigurationService>();
         services.AddHostedService<BotService>();
     })
     .UseConsoleLifetime()
