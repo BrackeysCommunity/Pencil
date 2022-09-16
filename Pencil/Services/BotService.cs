@@ -31,7 +31,22 @@ internal sealed class BotService : BackgroundService
     {
         _serviceProvider = serviceProvider;
         _discordClient = discordClient;
+
+        var attribute = typeof(BotService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        Version = attribute?.InformationalVersion ?? "Unknown";
     }
+
+    /// <summary>
+    ///     Gets the date and time at which the bot was started.
+    /// </summary>
+    /// <value>The start timestamp.</value>
+    public DateTimeOffset StartedAt { get; private set; }
+
+    /// <summary>
+    ///     Gets the bot version.
+    /// </summary>
+    /// <value>The bot version.</value>
+    public string Version { get; }
 
     /// <inheritdoc />
     public override Task StopAsync(CancellationToken cancellationToken)
@@ -55,6 +70,7 @@ internal sealed class BotService : BackgroundService
 
         Logger.Info("Registering commands...");
         slashCommands.RegisterCommands<FormatCodeCommand>();
+        slashCommands.RegisterCommands<InfoCommand>();
         slashCommands.RegisterCommands<TexCommand>();
 
         Logger.Info("Connecting to Discord...");
