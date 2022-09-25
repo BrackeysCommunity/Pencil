@@ -34,7 +34,7 @@ internal sealed class LatexService
         };
 
         Stream? stream = painter.DrawAsStream(format: SKEncodedImageFormat.Png);
-        if (stream is null)
+        if (stream is null || !string.IsNullOrWhiteSpace(painter.ErrorMessage))
             return new RenderResult(null, false, painter.ErrorMessage);
 
         using Image sourceImage = Image.Load(stream);
