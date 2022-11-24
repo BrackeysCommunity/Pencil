@@ -57,6 +57,7 @@ internal sealed class BotService : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        StartedAt = DateTimeOffset.UtcNow;
         Logger.Info($"Pencil v{Version} is starting...");
 
         _discordClient.UseInteractivity();
