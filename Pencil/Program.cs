@@ -22,7 +22,7 @@ await Host.CreateDefaultBuilder(args)
         {
             Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
             LoggerFactory = new NLogLoggerFactory(),
-            Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages
+            Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
         }));
 
         services.AddHostedSingleton<LoggingService>();

@@ -29,9 +29,9 @@
 
     <ItemGroup>
         <PackageReference Include="CSharpMath.SkiaSharp" Version="0.5.1"/>
-        <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01170"/>
-        <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01170"/>
-        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01170"/>
+        <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01188"/>
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01188"/>
+        <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0-nightly-01188"/>
         <PackageReference Include="Humanizer.Core" Version="2.14.1"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0"/>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0"/>
