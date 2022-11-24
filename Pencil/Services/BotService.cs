@@ -57,9 +57,7 @@ internal sealed class BotService : BackgroundService
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var attribute = typeof(BotService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        string version = attribute?.InformationalVersion ?? "Unknown";
-        Logger.Info($"Pencil v{version} is starting...");
+        Logger.Info($"Pencil v{Version} is starting...");
 
         _discordClient.UseInteractivity();
 
