@@ -45,4 +45,13 @@
         <PackageReference Include="X10D.Hosting" Version="3.2.0-nightly.152"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="..\docker-compose.yaml">
+            <Link>docker-compose.yaml</Link>
+        </Content>
+        <Content Include="..\Dockerfile">
+            <Link>Dockerfile</Link>
+        </Content>
+    </ItemGroup>
+
 </Project>
