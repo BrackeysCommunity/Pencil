@@ -3,7 +3,7 @@
 <p align="center"><i>A Discord bot for rendering TeX expressions.</i></p>
 <p align="center">
 <a href="https://github.com/BrackeysBot/Pencil/releases"><img src="https://img.shields.io/github/v/release/BrackeysBot/Pencil?include_prereleases"></a>
-<a href="https://github.com/BrackeysBot/Pencil/actions?query=workflow%3A%22.NET%22"><img src="https://img.shields.io/github/workflow/status/BrackeysBot/Pencil/.NET" alt="GitHub Workflow Status" title="GitHub Workflow Status"></a>
+<a href="https://github.com/BrackeysBot/Pencil/actions/workflows/dotnet.yml"><img src="https://img.shields.io/github/actions/workflow/status/BrackeysBot/Pencil/dotnet.yml" alt="GitHub Workflow Status" title="GitHub Workflow Status"></a>
 <a href="https://github.com/BrackeysBot/Pencil/issues"><img src="https://img.shields.io/github/issues/BrackeysBot/Pencil" alt="GitHub Issues" title="GitHub Issues"></a>
 <a href="https://github.com/BrackeysBot/Pencil/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/BrackeysBot/Pencil" alt="MIT License" title="MIT License"></a>
 </p>
