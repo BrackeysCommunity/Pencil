@@ -43,7 +43,7 @@ internal sealed class LatexService
         image.Mutate(ctx =>
         {
             int halfPadding = Padding / 2;
-            ctx.Fill(Color.FromRgb(0x36, 0x39, 0x3f)); // discord grey
+            ctx.Fill(Color.FromRgb(0x31, 0x33, 0x38)); // discord grey
 
             // ReSharper disable once AccessToDisposedClosure
             ctx.DrawImage(sourceImage, new Point(halfPadding, halfPadding), 1f);
