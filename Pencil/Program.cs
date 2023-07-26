@@ -25,6 +25,8 @@ await Host.CreateDefaultBuilder(args)
             Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
         }));
 
+        services.AddSingleton<HttpClient>();
+
         services.AddHostedSingleton<LoggingService>();
         services.AddSingleton<LatexService>();
         services.AddSingleton<ConfigurationService>();

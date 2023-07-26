@@ -68,6 +68,7 @@ internal sealed class BotService : BackgroundService
         });
 
         Logger.Info("Registering commands...");
+        slashCommands.RegisterCommands<ColorCommand>();
         slashCommands.RegisterCommands<FormatCodeCommand>();
         slashCommands.RegisterCommands<InfoCommand>();
         slashCommands.RegisterCommands<TexCommand>();
