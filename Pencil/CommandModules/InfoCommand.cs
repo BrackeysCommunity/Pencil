@@ -40,6 +40,7 @@ internal sealed class InfoCommand : ApplicationCommandModule
         embed.WithTitle($"Pencil v{pencilVersion}");
         embed.AddField("Ping", client.Ping, true);
         embed.AddField("Uptime", (DateTimeOffset.UtcNow - _botService.StartedAt).Humanize(), true);
+        embed.AddField("View Source", "[View on GitHub](https://github.com/BrackeysBot/Pencil)", true);
 
         var builder = new StringBuilder();
         builder.AppendLine($"Pencil: {pencilVersion}");
