@@ -5,18 +5,26 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
 using Pencil.Services;
+using Serilog;
 using X10D.Hosting.DependencyInjection;
 
 Directory.CreateDirectory("data");
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/latest.log", rollingInterval: RollingInterval.Day)
+#if DEBUG
+    .MinimumLevel.Debug()
+#endif
+    .CreateLogger();
 
 await Host.CreateDefaultBuilder(args)
     .ConfigureAppConfiguration(builder => builder.AddJsonFile("data/config.json", true, true))
     .ConfigureLogging(builder =>
     {
         builder.ClearProviders();
-        builder.AddNLog();
+        builder.AddSerilog();
     })
     .ConfigureServices(services =>
     {
@@ -29,7 +37,6 @@ await Host.CreateDefaultBuilder(args)
 
         services.AddSingleton<HttpClient>();
 
-        services.AddHostedSingleton<LoggingService>();
         services.AddSingleton<LatexService>();
         services.AddSingleton<ConfigurationService>();
         services.AddHostedSingleton<BotService>();

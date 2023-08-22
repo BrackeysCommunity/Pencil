@@ -3,9 +3,8 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Pencil.CommandModules;
-using ILogger = NLog.ILogger;
 
 namespace Pencil.Services;
 
@@ -14,8 +13,7 @@ namespace Pencil.Services;
 /// </summary>
 internal sealed class BotService : BackgroundService
 {
-    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
-
+    private readonly ILogger<BotService> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly DiscordSocketClient _discordClient;
     private readonly InteractionService _interactionService;
@@ -23,11 +21,16 @@ internal sealed class BotService : BackgroundService
     /// <summary>
     ///     Initializes a new instance of the <see cref="BotService" /> class.
     /// </summary>
+    /// <param name="logger">The logger.</param>
     /// <param name="serviceProvider">The service provider.</param>
     /// <param name="discordClient">The Discord client.</param>
     /// <param name="interactionService">The interaction service.</param>
-    public BotService(IServiceProvider serviceProvider, DiscordSocketClient discordClient, InteractionService interactionService)
+    public BotService(ILogger<BotService> logger,
+        IServiceProvider serviceProvider,
+        DiscordSocketClient discordClient,
+        InteractionService interactionService)
     {
+        _logger = logger;
         _serviceProvider = serviceProvider;
         _discordClient = discordClient;
         _interactionService = interactionService;
@@ -67,14 +70,14 @@ internal sealed class BotService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         StartedAt = DateTimeOffset.UtcNow;
-        Logger.Info($"Pencil v{Version} is starting...");
+        _logger.LogInformation("Pencil v{Version} is starting...", Version);
 
         await _interactionService.AddModuleAsync<ColorCommand>(_serviceProvider).ConfigureAwait(false);
         await _interactionService.AddModuleAsync<FormatCodeCommand>(_serviceProvider).ConfigureAwait(false);
         await _interactionService.AddModuleAsync<InfoCommand>(_serviceProvider).ConfigureAwait(false);
         await _interactionService.AddModuleAsync<TexCommand>(_serviceProvider).ConfigureAwait(false);
 
-        Logger.Info("Connecting to Discord...");
+        _logger.LogInformation("Connecting to Discord...");
         _discordClient.Ready += OnReady;
         _discordClient.InteractionCreated += OnInteractionCreated;
 
@@ -105,7 +108,7 @@ internal sealed class BotService : BackgroundService
 
     private Task OnReady()
     {
-        Logger.Info("Discord client ready");
+        _logger.LogInformation("Discord client ready");
         return _interactionService.RegisterCommandsGloballyAsync();
     }
 }
