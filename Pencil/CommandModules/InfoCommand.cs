@@ -4,6 +4,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Humanizer;
 using Pencil.Services;
+using Color = Discord.Color;
 
 namespace Pencil.CommandModules;
 

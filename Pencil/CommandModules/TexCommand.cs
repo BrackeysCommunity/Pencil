@@ -3,6 +3,7 @@ using Discord;
 using Discord.Interactions;
 using Pencil.Configuration;
 using Pencil.Services;
+using Color = Discord.Color;
 
 namespace Pencil.CommandModules;
 
