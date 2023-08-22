@@ -2,14 +2,14 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using SixLabors.ImageSharp;
+using Discord;
+using Discord.Interactions;
 using X10D.Collections;
+using Color = SixLabors.ImageSharp.Color;
 
 namespace Pencil.CommandModules;
 
-internal sealed partial class ColorCommand : ApplicationCommandModule
+internal sealed partial class ColorCommand : InteractionModuleBase<SocketInteractionContext>
 {
     private static readonly Dictionary<string, Color> PredefinedColors = typeof(Color)
         .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -28,9 +28,9 @@ internal sealed partial class ColorCommand : ApplicationCommandModule
         _httpClient = httpClient;
     }
 
-    [SlashCommand("color", "Displays information about a colour.")]
-    public async Task ColorAsync(InteractionContext context,
-        [Option("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")]
+    [SlashCommand("color", "Displays information about a colour.", runMode: RunMode.Async)]
+    public async Task ColorAsync(
+        [Summary("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")]
         string color)
     {
         var query = new Dictionary<string, string>
@@ -60,11 +60,11 @@ internal sealed partial class ColorCommand : ApplicationCommandModule
         }
         else
         {
-            await context.CreateResponseAsync("Invalid color", true).ConfigureAwait(false);
+            await RespondAsync("Invalid color", ephemeral: true).ConfigureAwait(false);
             return;
         }
 
-        await context.DeferAsync().ConfigureAwait(false);
+        await DeferAsync();
 
         var uri = $"https://www.thecolorapi.com/id?{query.ToGetParameters()}";
         await using Stream stream = await _httpClient.GetStreamAsync(uri);
@@ -77,10 +77,10 @@ internal sealed partial class ColorCommand : ApplicationCommandModule
 
         int hex = int.Parse(response.Hex.Clean, NumberStyles.HexNumber);
 
-        var embed = new DiscordEmbedBuilder();
-        embed.WithColor(hex);
+        var embed = new EmbedBuilder();
+        embed.WithColor((uint)hex);
         embed.WithTitle(response.Name.Value);
-        embed.WithThumbnail($"https://singlecolorimage.com/get/{hex:X6}/128x128");
+        embed.WithThumbnailUrl($"https://singlecolorimage.com/get/{hex:X6}/128x128");
         embed.AddField("Hex", response.Hex.Value, true);
         embed.AddField("RGB", response.Rgb.Value, true);
         embed.AddField("HSL", response.Hsl.Value, true);
@@ -96,10 +96,7 @@ internal sealed partial class ColorCommand : ApplicationCommandModule
             embed.AddField("Closest Named Hex", response.Name.ClosestNamedHex, true);
         }
 
-        var builder = new DiscordWebhookBuilder();
-        builder.AddEmbed(embed);
-
-        await context.EditResponseAsync(builder).ConfigureAwait(false);
+        await ModifyOriginalResponseAsync(message => message.Embed = embed.Build()).ConfigureAwait(false);
     }
 
     private static bool IsNamedColor(string color, out Color result)

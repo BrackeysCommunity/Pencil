@@ -1,10 +1,7 @@
 ﻿using System.Reflection;
-using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using DSharpPlus.Exceptions;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.SlashCommands;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using NLog;
 using Pencil.CommandModules;
@@ -20,21 +17,33 @@ internal sealed class BotService : BackgroundService
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly IServiceProvider _serviceProvider;
-    private readonly DiscordClient _discordClient;
+    private readonly DiscordSocketClient _discordClient;
+    private readonly InteractionService _interactionService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="BotService" /> class.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
     /// <param name="discordClient">The Discord client.</param>
-    public BotService(IServiceProvider serviceProvider, DiscordClient discordClient)
+    /// <param name="interactionService">The interaction service.</param>
+    public BotService(IServiceProvider serviceProvider, DiscordSocketClient discordClient, InteractionService interactionService)
     {
         _serviceProvider = serviceProvider;
         _discordClient = discordClient;
+        _interactionService = interactionService;
 
         var attribute = typeof(BotService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         Version = attribute?.InformationalVersion ?? "Unknown";
+
+        attribute = typeof(DiscordSocketClient).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        DiscordNetVersion = attribute?.InformationalVersion ?? "Unknown";
     }
+
+    /// <summary>
+    ///     Gets the Discord.Net version.
+    /// </summary>
+    /// <value>The Discord.Net version.</value>
+    public string DiscordNetVersion { get; }
 
     /// <summary>
     ///     Gets the date and time at which the bot was started.
@@ -51,7 +60,7 @@ internal sealed class BotService : BackgroundService
     /// <inheritdoc />
     public override Task StopAsync(CancellationToken cancellationToken)
     {
-        return Task.WhenAll(_discordClient.DisconnectAsync(), base.StopAsync(cancellationToken));
+        return Task.WhenAll(_discordClient.DisposeAsync().AsTask(), base.StopAsync(cancellationToken));
     }
 
     /// <inheritdoc />
@@ -60,109 +69,43 @@ internal sealed class BotService : BackgroundService
         StartedAt = DateTimeOffset.UtcNow;
         Logger.Info($"Pencil v{Version} is starting...");
 
-        _discordClient.UseInteractivity();
-
-        SlashCommandsExtension slashCommands = _discordClient.UseSlashCommands(new SlashCommandsConfiguration
-        {
-            Services = _serviceProvider
-        });
-
-        Logger.Info("Registering commands...");
-        slashCommands.RegisterCommands<ColorCommand>();
-        slashCommands.RegisterCommands<FormatCodeCommand>();
-        slashCommands.RegisterCommands<InfoCommand>();
-        slashCommands.RegisterCommands<TexCommand>();
+        await _interactionService.AddModuleAsync<ColorCommand>(_serviceProvider).ConfigureAwait(false);
+        await _interactionService.AddModuleAsync<FormatCodeCommand>(_serviceProvider).ConfigureAwait(false);
+        await _interactionService.AddModuleAsync<InfoCommand>(_serviceProvider).ConfigureAwait(false);
+        await _interactionService.AddModuleAsync<TexCommand>(_serviceProvider).ConfigureAwait(false);
 
         Logger.Info("Connecting to Discord...");
         _discordClient.Ready += OnReady;
+        _discordClient.InteractionCreated += OnInteractionCreated;
 
-        RegisterEvents(slashCommands);
-
-        await _discordClient.ConnectAsync().ConfigureAwait(false);
+        await _discordClient.LoginAsync(TokenType.Bot, Environment.GetEnvironmentVariable("DISCORD_TOKEN")).ConfigureAwait(false);
+        await _discordClient.StartAsync().ConfigureAwait(false);
     }
 
-    private Task OnReady(DiscordClient sender, ReadyEventArgs e)
+    private async Task OnInteractionCreated(SocketInteraction interaction)
+    {
+        try
+        {
+            var context = new SocketInteractionContext(_discordClient, interaction);
+            IResult result = await _interactionService.ExecuteCommandAsync(context, _serviceProvider);
+
+            if (!result.IsSuccess)
+                switch (result.Error)
+                {
+                    case InteractionCommandError.UnmetPrecondition:
+                        break;
+                }
+        }
+        catch
+        {
+            if (interaction.Type is InteractionType.ApplicationCommand)
+                await interaction.GetOriginalResponseAsync().ContinueWith(async msg => await msg.Result.DeleteAsync());
+        }
+    }
+
+    private Task OnReady()
     {
         Logger.Info("Discord client ready");
-        return Task.CompletedTask;
-    }
-
-    private static void RegisterEvents(SlashCommandsExtension slashCommands)
-    {
-        slashCommands.AutocompleteErrored += (_, args) =>
-        {
-            Logger.Error(args.Exception, "An exception was thrown when performing autocomplete");
-            if (args.Exception is DiscordException discordException)
-                Logger.Error($"API response: {discordException.JsonMessage}");
-
-            return Task.CompletedTask;
-        };
-
-        slashCommands.SlashCommandInvoked += (_, args) =>
-        {
-            var optionsString = "";
-            if (args.Context.Interaction?.Data?.Options is { } options)
-                optionsString = $" {string.Join(" ", options.Select(o => $"{o?.Name}: '{o?.Value}'"))}";
-
-            Logger.Info($"{args.Context.User} ran slash command /{args.Context.CommandName}{optionsString}");
-            return Task.CompletedTask;
-        };
-
-        slashCommands.ContextMenuInvoked += (_, args) =>
-        {
-            DiscordInteractionResolvedCollection? resolved = args.Context.Interaction?.Data?.Resolved;
-            var properties = new List<string>();
-            if (resolved?.Attachments?.Count > 0)
-                properties.Add($"attachments: {string.Join(", ", resolved.Attachments.Select(a => a.Value.Url))}");
-            if (resolved?.Channels?.Count > 0)
-                properties.Add($"channels: {string.Join(", ", resolved.Channels.Select(c => c.Value.Name))}");
-            if (resolved?.Members?.Count > 0)
-                properties.Add($"members: {string.Join(", ", resolved.Members.Select(m => m.Value.Id))}");
-            if (resolved?.Messages?.Count > 0)
-                properties.Add($"messages: {string.Join(", ", resolved.Messages.Select(m => m.Value.Id))}");
-            if (resolved?.Roles?.Count > 0)
-                properties.Add($"roles: {string.Join(", ", resolved.Roles.Select(r => r.Value.Id))}");
-            if (resolved?.Users?.Count > 0)
-                properties.Add($"users: {string.Join(", ", resolved.Users.Select(r => r.Value.Id))}");
-
-            Logger.Info($"{args.Context.User} invoked context menu '{args.Context.CommandName}' with resolved " +
-                        string.Join("; ", properties));
-
-            return Task.CompletedTask;
-        };
-
-        slashCommands.ContextMenuErrored += (_, args) =>
-        {
-            ContextMenuContext context = args.Context;
-            if (args.Exception is ContextMenuExecutionChecksFailedException)
-            {
-                context.CreateResponseAsync("You do not have permission to use this command.", true);
-                return Task.CompletedTask; // no need to log ChecksFailedException
-            }
-
-            string? name = context.Interaction.Data.Name;
-            Logger.Error(args.Exception, $"An exception was thrown when executing context menu '{name}'");
-            if (args.Exception is DiscordException discordException)
-                Logger.Error($"API response: {discordException.JsonMessage}");
-
-            return Task.CompletedTask;
-        };
-
-        slashCommands.SlashCommandErrored += (_, args) =>
-        {
-            InteractionContext context = args.Context;
-            if (args.Exception is SlashExecutionChecksFailedException)
-            {
-                context.CreateResponseAsync("You do not have permission to use this command.", true);
-                return Task.CompletedTask; // no need to log SlashExecutionChecksFailedException
-            }
-
-            string? name = context.Interaction.Data.Name;
-            Logger.Error(args.Exception, $"An exception was thrown when executing slash command '{name}'");
-            if (args.Exception is DiscordException discordException)
-                Logger.Error($"API response: {discordException.JsonMessage}");
-
-            return Task.CompletedTask;
-        };
+        return _interactionService.RegisterCommandsGloballyAsync();
     }
 }

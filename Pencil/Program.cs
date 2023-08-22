@@ -1,4 +1,6 @@
-﻿using DSharpPlus;
+﻿using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,12 +20,12 @@ await Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices(services =>
     {
-        services.AddSingleton(new DiscordClient(new DiscordConfiguration
+        services.AddSingleton<DiscordSocketClient>();
+        services.AddSingleton<InteractionService>();
+        services.AddSingleton(new DiscordSocketConfig
         {
-            Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
-            LoggerFactory = new NLogLoggerFactory(),
-            Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
-        }));
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
+        });
 
         services.AddSingleton<HttpClient>();
 
