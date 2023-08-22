@@ -1,13 +1,11 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
+﻿using Discord;
+using Discord.Interactions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Pencil.CommandModules;
 
-internal sealed class FormatCodeCommand : ApplicationCommandModule
+internal sealed class FormatCodeCommand : InteractionModuleBase<SocketInteractionContext>
 {
     private static readonly string[] SupportedLanguages =
     {
@@ -19,11 +17,10 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         "sql", "stan", "swift", "tcl", "thrift", "typescript", "vala", "zephir"
     };
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code")]
-    [SlashRequireGuild]
-    public async Task FormatCodeAsync(ContextMenuContext context)
+    [MessageCommand("Format Code")]
+    [RequireContext(ContextType.Guild)]
+    public async Task FormatCodeAsync(IMessage message)
     {
-        DiscordMessage message = context.Interaction.Data.Resolved.Messages.First().Value;
         string code = message.Content;
         string firstWord = code.Split(' ')[0];
         if (TryDetectLanguage(firstWord, out string language))
@@ -37,7 +34,7 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         SyntaxNode node = (await tree.GetRootAsync()).NormalizeWhitespace();
         string formattedCode = node.ToFullString();
 
-        await context.CreateResponseAsync(Formatter.BlockCode(formattedCode, language), true).ConfigureAwait(false);
+        await RespondAsync($"```{language}\n{formattedCode}\n```", ephemeral: true).ConfigureAwait(false);
     }
 
     private static bool TryDetectLanguage(string input, out string language)

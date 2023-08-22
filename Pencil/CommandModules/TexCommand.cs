@@ -1,16 +1,16 @@
 ﻿using System.Text.RegularExpressions;
-using DSharpPlus;
-using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
+using Discord;
+using Discord.Interactions;
 using Pencil.Configuration;
 using Pencil.Services;
+using Color = Discord.Color;
 
 namespace Pencil.CommandModules;
 
 /// <summary>
 ///     Represents a class which implements the <c>Render TeX</c> command and <c>/tex</c> slash command.
 /// </summary>
-internal sealed class TexCommand : ApplicationCommandModule
+internal sealed class TexCommand : InteractionModuleBase<SocketInteractionContext>
 {
     private readonly ConfigurationService _configurationService;
     private readonly LatexService _latexService;
@@ -26,47 +26,43 @@ internal sealed class TexCommand : ApplicationCommandModule
         _latexService = latexService;
     }
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Render TeX")]
-    public async Task RenderTexAsync(ContextMenuContext context)
+    [MessageCommand("Render TeX")]
+    public async Task RenderTexAsync(IMessage message)
     {
-        DiscordMessage? message = context.Interaction.Data.Resolved.Messages.FirstOrDefault().Value;
-        if (string.IsNullOrWhiteSpace(message?.Content))
+        if (string.IsNullOrWhiteSpace(message.Content))
         {
-            _ = context.CreateResponseAsync("This message does not contain any content.", true);
+            await RespondAsync("This message does not contain any content.", ephemeral: true).ConfigureAwait(false);
             return;
         }
 
         using LatexService.RenderResult result = _latexService.Render(message.Content);
         if (!result.Success)
         {
-            var embed = new DiscordEmbedBuilder();
-            embed.WithColor(DiscordColor.Red);
+            var embed = new EmbedBuilder();
+            embed.WithColor(Color.Red);
             embed.WithTitle("Error displaying TeX");
-            embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
+            embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
+            await RespondAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
             return;
         }
-
-        var builder = new DiscordInteractionResponseBuilder();
-        builder.AsEphemeral();
-        builder.AddFile("output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder).ConfigureAwait(false);
+        
+        await RespondWithFileAsync(result.ImageStream, "output.png", ephemeral: true).ConfigureAwait(false);
     }
 
     [SlashCommand("tex", "Renders a TeX expression.")]
-    public async Task TexCommandAsync(InteractionContext context,
-        [Option("expression", "The expression to render")] string expression,
-        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
+    public async Task TexCommandAsync(
+        [Summary("expression", "The expression to render")] string expression,
+        [Summary("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
-        if (context.Guild is { } guild &&
+        if (Context.Guild is { } guild &&
             _configurationService.TryGetGuildConfiguration(guild, out GuildConfiguration? guildConfiguration))
         {
             foreach (string pattern in guildConfiguration.FilteredRegexes)
             {
                 if (Regex.IsMatch(expression, pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 {
-                    await context.CreateResponseAsync("The expression contains a filtered word.", true).ConfigureAwait(false);
+                    await RespondAsync("The expression contains a filtered word.", ephemeral: true).ConfigureAwait(false);
                     return;
                 }
             }
@@ -76,17 +72,16 @@ internal sealed class TexCommand : ApplicationCommandModule
 
         if (!result.Success)
         {
-            var embed = new DiscordEmbedBuilder();
-            embed.WithColor(DiscordColor.Red);
+            var embed = new EmbedBuilder();
+            embed.WithColor(Color.Red);
             embed.WithTitle("Error displaying TeX");
-            embed.WithDescription(Formatter.BlockCode(result.ErrorMessage));
+            embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
+            await RespondAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
             return;
         }
 
-        var builder = new DiscordInteractionResponseBuilder();
-        builder.AddFile($"{(spoiler ? "SPOILER_" : "")}output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder).ConfigureAwait(false);
+        var fileName = $"{(spoiler ? "SPOILER_" : "")}output.png";
+        await RespondWithFileAsync(result.ImageStream, fileName).ConfigureAwait(false);
     }
 }
