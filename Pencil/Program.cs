@@ -19,27 +19,23 @@ Log.Logger = new LoggerConfiguration()
 #endif
     .CreateLogger();
 
-await Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration(builder => builder.AddJsonFile("data/config.json", true, true))
-    .ConfigureLogging(builder =>
-    {
-        builder.ClearProviders();
-        builder.AddSerilog();
-    })
-    .ConfigureServices(services =>
-    {
-        services.AddSingleton<DiscordSocketClient>();
-        services.AddSingleton<InteractionService>();
-        services.AddSingleton(new DiscordSocketConfig
-        {
-            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
-        });
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddJsonFile("data/config.json", true, true);
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog();
 
-        services.AddSingleton<HttpClient>();
+builder.Services.AddSingleton<DiscordSocketClient>();
+builder.Services.AddSingleton<InteractionService>();
+builder.Services.AddSingleton(new DiscordSocketConfig
+{
+    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
+});
 
-        services.AddSingleton<LatexService>();
-        services.AddSingleton<ConfigurationService>();
-        services.AddHostedSingleton<BotService>();
-    })
-    .UseConsoleLifetime()
-    .RunConsoleAsync();
+builder.Services.AddSingleton<HttpClient>();
+
+builder.Services.AddSingleton<LatexService>();
+builder.Services.AddSingleton<ConfigurationService>();
+builder.Services.AddHostedSingleton<BotService>();
+
+IHost app = builder.Build();
+await app.RunAsync();
