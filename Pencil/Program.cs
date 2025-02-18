@@ -33,6 +33,7 @@ builder.Services.AddSingleton(new DiscordSocketConfig
 
 builder.Services.AddSingleton<HttpClient>();
 
+builder.Services.AddHostedSingleton<ColorService>();
 builder.Services.AddSingleton<LatexService>();
 builder.Services.AddSingleton<ConfigurationService>();
 builder.Services.AddHostedSingleton<BotService>();

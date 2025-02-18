@@ -1,8 +1,8 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 WORKDIR /app
 RUN apt-get update && apt-get install -y libfontconfig1
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["Pencil/Pencil.csproj", "Pencil/"]
 RUN dotnet restore "Pencil/Pencil.csproj"
