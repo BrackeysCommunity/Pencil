@@ -8,11 +8,11 @@ internal class Cmyk
 
     [JsonPropertyName("value")] public string Value { get; set; } = string.Empty;
 
-    [JsonPropertyName("c")] public int C { get; set; }
+    [JsonPropertyName("c")] public int? C { get; set; }
 
-    [JsonPropertyName("m")] public int M { get; set; }
+    [JsonPropertyName("m")] public int? M { get; set; }
 
-    [JsonPropertyName("y")] public int Y { get; set; }
+    [JsonPropertyName("y")] public int? Y { get; set; }
 
-    [JsonPropertyName("k")] public int K { get; set; }
+    [JsonPropertyName("k")] public int? K { get; set; }
 }
