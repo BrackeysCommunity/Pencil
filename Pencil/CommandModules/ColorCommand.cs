@@ -1,31 +1,22 @@
 ﻿using System.Globalization;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using Discord;
 using Discord.Interactions;
-using X10D.Collections;
+using Pencil.Services;
 using Color = SixLabors.ImageSharp.Color;
 
 namespace Pencil.CommandModules;
 
-internal sealed partial class ColorCommand : InteractionModuleBase<SocketInteractionContext>
+internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionContext>
 {
-    private static readonly Dictionary<string, Color> PredefinedColors = typeof(Color)
-        .GetFields(BindingFlags.Public | BindingFlags.Static)
-        .Where(f => f.FieldType == typeof(Color))
-        .ToDictionary(f => f.Name.ToUpperInvariant(), f => (Color)f.GetValue(null)!);
-
-    private readonly HttpClient _httpClient;
-
+    private readonly ColorService _colorService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ColorCommand" /> class.
     /// </summary>
-    /// <param name="httpClient">The HTTP client.</param>
-    public ColorCommand(HttpClient httpClient)
+    /// <param name="colorService">The color service.</param>
+    public ColorCommand(ColorService colorService)
     {
-        _httpClient = httpClient;
+        _colorService = colorService;
     }
 
     [SlashCommand("color", "Displays information about a colour.", runMode: RunMode.Async)]
@@ -38,23 +29,23 @@ internal sealed partial class ColorCommand : InteractionModuleBase<SocketInterac
             ["format"] = "json"
         };
 
-        if (IsCmykColor(color))
+        if (_colorService.IsCmykColor(color))
         {
             query.Add("cmyk", color);
         }
-        else if (IsHslColor(color))
+        else if (_colorService.IsHslColor(color))
         {
             query.Add("hsl", color);
         }
-        else if (IsRgbColor(color))
+        else if (_colorService.IsRgbColor(color))
         {
             query.Add("rgb", color);
         }
-        else if (IsHexColor(color))
+        else if (_colorService.IsHexColor(color))
         {
             query.Add("hex", color.TrimStart('#'));
         }
-        else if (IsNamedColor(color, out Color result))
+        else if (_colorService.IsNamedColor(color, out Color result))
         {
             query.Add("hex", result.ToHex()[..6]);
         }
@@ -66,12 +57,14 @@ internal sealed partial class ColorCommand : InteractionModuleBase<SocketInterac
 
         await DeferAsync();
 
-        var uri = $"https://www.thecolorapi.com/id?{query.ToGetParameters()}";
-        await using Stream stream = await _httpClient.GetStreamAsync(uri);
-        var response = JsonSerializer.Deserialize<Response>(stream);
+        var response = await _colorService.GetColorInformation(query);
+
         if (response is null)
         {
-            // invalid color
+            await ModifyOriginalResponseAsync(properties =>
+            {
+                properties.Content = "An error occurred while fetching the color information.";
+            });
             return;
         }
 
@@ -97,32 +90,5 @@ internal sealed partial class ColorCommand : InteractionModuleBase<SocketInterac
         }
 
         await ModifyOriginalResponseAsync(message => message.Embed = embed.Build()).ConfigureAwait(false);
-    }
-
-    private static bool IsNamedColor(string color, out Color result)
-    {
-        color = Regex.Replace(color, "\\s*", string.Empty);
-        color = color.ToUpperInvariant();
-        return PredefinedColors.TryGetValue(color, out result);
-    }
-
-    private static bool IsHexColor(string input)
-    {
-        return Regex.IsMatch(input, @"^#?(?:[0-9a-fA-F]{3}){1,2}$", RegexOptions.Compiled);
-    }
-
-    private static bool IsRgbColor(string input)
-    {
-        return Regex.IsMatch(input, @"^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$", RegexOptions.Compiled);
-    }
-
-    private static bool IsHslColor(string input)
-    {
-        return Regex.IsMatch(input, @"^hsl\((\d{1,3}),\s*(\d{1,3})%,\s*(\d{1,3})%\)$", RegexOptions.Compiled);
-    }
-
-    private static bool IsCmykColor(string input)
-    {
-        return Regex.IsMatch(input, @"^cmyk\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$", RegexOptions.Compiled);
     }
 }
