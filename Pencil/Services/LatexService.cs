@@ -1,4 +1,5 @@
 ﻿using CSharpMath.SkiaSharp;
+using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats.Png;
@@ -12,6 +13,17 @@ namespace Pencil.Services;
 
 internal sealed class LatexService
 {
+    private readonly ILogger<LatexService> _logger;
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="LatexService" /> class.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    public LatexService(ILogger<LatexService> logger)
+    {
+        _logger = logger;
+    }
+
     /// <summary>
     ///     Gets or sets the padding around a rendered latex image.
     /// </summary>
@@ -33,9 +45,22 @@ internal sealed class LatexService
             TextColor = SKColors.White
         };
 
-        Stream? stream = painter.DrawAsStream(format: SKEncodedImageFormat.Png);
+        Stream? stream;
+        try
+        {
+            stream = painter.DrawAsStream(format: SKEncodedImageFormat.Png);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error rendering LaTeX");
+            return new RenderResult(null, false, ex.Message);
+        }
+
         if (stream is null || !string.IsNullOrWhiteSpace(painter.ErrorMessage))
+        {
+            _logger.LogError("Error rendering LaTeX: {ErrorMessage}", painter.ErrorMessage);
             return new RenderResult(null, false, painter.ErrorMessage);
+        }
 
         using Image sourceImage = Image.Load(stream);
 
@@ -50,7 +75,7 @@ internal sealed class LatexService
         });
 
         var buffer = new MemoryStream();
-        image.Save(buffer, new PngEncoder {CompressionLevel = 0});
+        image.Save(buffer, new PngEncoder { CompressionLevel = 0 });
         buffer.Position = 0; // reset head for D#+
 
         return new RenderResult(buffer, true, null);
