@@ -39,7 +39,7 @@
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0"/>
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6"/>
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5"/>
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1"/>
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9"/>
         <PackageReference Include="X10D" Version="4.0.0"/>
         <PackageReference Include="X10D.Hosting" Version="4.0.0"/>
     </ItemGroup>
