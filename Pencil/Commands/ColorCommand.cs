@@ -51,7 +51,7 @@ internal sealed class ColorCommand : ApplicationCommandModule
         }
         else
         {
-            await context.CreateResponseAsync("Invalid color", true).ConfigureAwait(false);
+            await context.CreateResponseAsync("Invalid color", true);
             return;
         }
 
@@ -89,6 +89,6 @@ internal sealed class ColorCommand : ApplicationCommandModule
         }
 
         builder.AddEmbed(embed);
-        await context.EditResponseAsync(builder).ConfigureAwait(false);
+        await context.EditResponseAsync(builder);
     }
 }

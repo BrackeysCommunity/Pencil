@@ -35,10 +35,10 @@ internal sealed class TexCommand : ApplicationCommandModule
     {
         DiscordMessage message = context.TargetMessage;
         string content = message.Content;
-       
+
         if (string.IsNullOrWhiteSpace(content))
         {
-            await context.CreateResponseAsync("This message does not contain any content.", true).ConfigureAwait(false);
+            await context.CreateResponseAsync("This message does not contain any content.", true);
             return;
         }
 
@@ -51,22 +51,20 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
+            await context.CreateResponseAsync(embed, true);
             return;
         }
 
         var builder = new DiscordInteractionResponseBuilder();
         builder.AsEphemeral();
         builder.AddFile("output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder).ConfigureAwait(false);
+        await context.CreateResponseAsync(builder);
     }
 
     [SlashCommand("tex", "Renders a TeX expression.")]
     public async Task TexCommandAsync(InteractionContext context,
-        [Option("expression", "The expression to render")]
-        string expression,
-        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")]
-        bool spoiler = false)
+        [Option("expression", "The expression to render")] string expression,
+        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
         if (context.Guild is { } guild &&
             _configurationService.TryGetGuildConfiguration(guild, out GuildConfiguration? guildConfiguration))
@@ -75,7 +73,7 @@ internal sealed class TexCommand : ApplicationCommandModule
             {
                 if (Regex.IsMatch(expression, pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 {
-                    await context.CreateResponseAsync("The expression contains a filtered word.", true).ConfigureAwait(false);
+                    await context.CreateResponseAsync("The expression contains a filtered word.", true);
                     return;
                 }
             }
@@ -91,7 +89,7 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true).ConfigureAwait(false);
+            await context.CreateResponseAsync(embed, true);
             return;
         }
 
@@ -99,6 +97,6 @@ internal sealed class TexCommand : ApplicationCommandModule
         var builder = new DiscordInteractionResponseBuilder();
         builder.AsEphemeral();
         builder.AddFile(fileName, result.ImageStream);
-        await context.CreateResponseAsync(builder).ConfigureAwait(false);
+        await context.CreateResponseAsync(builder);
     }
 }

@@ -35,7 +35,7 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         SyntaxNode node = (await tree.GetRootAsync()).NormalizeWhitespace();
         string formattedCode = node.ToFullString();
 
-        await context.CreateResponseAsync($"```{language}\n{formattedCode}\n```", true).ConfigureAwait(false);
+        await context.CreateResponseAsync($"```{language}\n{formattedCode}\n```", true);
     }
 
     private static bool TryDetectLanguage(string input, out string language)
