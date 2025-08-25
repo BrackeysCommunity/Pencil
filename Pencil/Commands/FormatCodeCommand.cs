@@ -23,6 +23,21 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
     public async Task FormatCodeAsync(ContextMenuContext context)
     {
         string code = context.TargetMessage.Content;
+        string codeblock = await CreateCodeblockAsync(code);
+        await context.CreateResponseAsync(codeblock, true);
+    }
+
+    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code (Public)", false)]
+    [SlashRequireGuild]
+    public async Task FormatCodePublicAsync(ContextMenuContext context)
+    {
+        string code = context.TargetMessage.Content;
+        string codeblock = await CreateCodeblockAsync(code);
+        await context.CreateResponseAsync(codeblock);
+    }
+
+    private static async Task<string> CreateCodeblockAsync(string code)
+    {
         string firstWord = code.Split(' ')[0];
         if (TryDetectLanguage(firstWord, out string language))
         {
@@ -34,8 +49,7 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         SyntaxTree tree = CSharpSyntaxTree.ParseText(trimmedCode);
         SyntaxNode node = (await tree.GetRootAsync()).NormalizeWhitespace();
         string formattedCode = node.ToFullString();
-
-        await context.CreateResponseAsync($"```{language}\n{formattedCode}\n```", true);
+        return $"```{language}\n{formattedCode}\n```";
     }
 
     private static bool TryDetectLanguage(string input, out string language)

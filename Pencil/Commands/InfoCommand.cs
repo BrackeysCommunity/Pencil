@@ -4,7 +4,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
-using Pencil.Configuration;
 using Pencil.Extensions;
 using Pencil.Services;
 
