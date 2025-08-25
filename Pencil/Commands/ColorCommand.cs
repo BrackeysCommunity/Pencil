@@ -1,12 +1,13 @@
 ﻿using System.Globalization;
-using Discord;
-using Discord.Interactions;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using Pencil.Data;
 using Pencil.Services;
 using Color = SixLabors.ImageSharp.Color;
 
 namespace Pencil.Commands;
 
-internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionContext>
+internal sealed class ColorCommand : ApplicationCommandModule
 {
     private readonly ColorService _colorService;
 
@@ -19,9 +20,9 @@ internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionCont
         _colorService = colorService;
     }
 
-    [SlashCommand("color", "Displays information about a colour.", runMode: RunMode.Async)]
-    public async Task ColorAsync(
-        [Summary("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
+    [SlashCommand("color", "Displays information about a colour.")]
+    public async Task ColorAsync(InteractionContext context,
+        [Option("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
     {
         var query = new Dictionary<string, string>
         {
@@ -50,29 +51,28 @@ internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionCont
         }
         else
         {
-            await RespondAsync("Invalid color", ephemeral: true).ConfigureAwait(false);
+            await context.CreateResponseAsync("Invalid color", true).ConfigureAwait(false);
             return;
         }
 
-        await DeferAsync();
+        await context.DeferAsync();
 
-        var response = await _colorService.GetColorInformation(query);
+        var builder = new DiscordWebhookBuilder();
+        Response? response = await _colorService.GetColorInformation(query);
 
         if (response is null)
         {
-            await ModifyOriginalResponseAsync(properties =>
-            {
-                properties.Content = "An error occurred while fetching the color information.";
-            });
+            builder.WithContent("An error occurred while fetching the color information.");
+            await context.EditResponseAsync(builder);
             return;
         }
 
         int hex = int.Parse(response.Hex.Clean, NumberStyles.HexNumber);
 
-        var embed = new EmbedBuilder();
-        embed.WithColor((uint)hex);
+        var embed = new DiscordEmbedBuilder();
+        embed.WithColor(hex);
         embed.WithTitle(response.Name.Value);
-        embed.WithThumbnailUrl($"https://singlecolorimage.com/get/{hex:X6}/128x128");
+        embed.WithThumbnail($"https://singlecolorimage.com/get/{hex:X6}/128x128");
         embed.AddField("Hex", response.Hex.Value, true);
         embed.AddField("RGB", response.Rgb.Value, true);
         embed.AddField("HSL", response.Hsl.Value, true);
@@ -88,6 +88,7 @@ internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionCont
             embed.AddField("Closest Named Hex", response.Name.ClosestNamedHex, true);
         }
 
-        await ModifyOriginalResponseAsync(message => message.Embed = embed.Build()).ConfigureAwait(false);
+        builder.AddEmbed(embed);
+        await context.EditResponseAsync(builder).ConfigureAwait(false);
     }
 }

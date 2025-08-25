@@ -1,58 +1,59 @@
 ﻿using System.Text;
-using Discord;
-using Discord.Interactions;
-using Discord.WebSocket;
+using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
+using Pencil.Configuration;
+using Pencil.Extensions;
 using Pencil.Services;
-using Color = Discord.Color;
 
 namespace Pencil.Commands;
 
 /// <summary>
 ///     Represents a class which implements the <c>info</c> command.
 /// </summary>
-internal sealed class InfoCommand : InteractionModuleBase<SocketInteractionContext>
+internal sealed class InfoCommand : ApplicationCommandModule
 {
     private readonly BotService _botService;
-    private readonly DiscordSocketClient _discordClient;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="InfoCommand" /> class.
     /// </summary>
     /// <param name="botService">The bot service.</param>
-    /// <param name="discordClient"></param>
-    public InfoCommand(BotService botService, DiscordSocketClient discordClient)
+    public InfoCommand(BotService botService)
     {
         _botService = botService;
-        _discordClient = discordClient;
     }
 
     [SlashCommand("info", "Displays information about the bot.")]
-    [RequireContext(ContextType.Guild)]
-    public async Task InfoAsync()
+    [SlashRequireGuild]
+    public async Task InfoAsync(InteractionContext context)
     {
-        SocketGuildUser member = Context.Guild.GetUser(_discordClient.CurrentUser.Id);
-        string pencilVersion = _botService.Version;
+        DiscordGuild guild = context.Guild;
+        DiscordClient client = context.Client;
+        DiscordMember member = (await client.CurrentUser.GetAsMemberOfAsync(guild))!;
+        string botVersion = _botService.Version;
+        DiscordColor embedColor = member.Color;
 
-        SocketRole? highestRole = member.Roles.Where(r => r.Color != Color.Default).MaxBy(r => r.Position);
-
-        var embed = new EmbedBuilder();
+        var embed = new DiscordEmbedBuilder();
         embed.WithAuthor(member);
-        embed.WithColor(highestRole?.Color ?? Color.Default);
-        embed.WithThumbnailUrl(member.GetAvatarUrl());
-        embed.WithTitle($"Pencil v{pencilVersion}");
-        embed.AddField("Ping", $"{_discordClient.Latency} ms", true);
+        embed.WithColor(embedColor);
+        embed.WithThumbnail(member.AvatarUrl);
+        embed.WithTitle($"Pencil v{botVersion}");
+        embed.AddField("Ping", $"{client.Ping} ms", true);
         embed.AddField("Uptime", (DateTimeOffset.UtcNow - _botService.StartedAt).Humanize(), true);
-        embed.AddField("View Source", "[View on GitHub](https://github.com/BrackeysBot/Pencil)", true);
+        embed.AddField("Source", "[View on GitHub](https://github.com/BrackeysCommunity/Pencil)", true);
 
         var builder = new StringBuilder();
-        builder.AppendLine($"Pencil: {pencilVersion}");
-        builder.AppendLine($"Discord.Net: {_botService.DiscordNetVersion}");
+        builder.AppendLine($"Pencil: {botVersion}");
+        builder.AppendLine($"D#+: {client.VersionString}");
+        builder.AppendLine($"Gateway: {client.GatewayVersion}");
         builder.AppendLine($"CLR: {Environment.Version.ToString(3)}");
         builder.AppendLine($"Host: {Environment.OSVersion}");
 
-        embed.AddField("Version", $"```\n{builder}\n```");
+        embed.AddField("Version", Formatter.BlockCode(builder.ToString()));
 
-        await RespondAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
+        await context.CreateResponseAsync(embed, true);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Discord;
+using DSharpPlus.Entities;
 using Microsoft.Extensions.Configuration;
 using Pencil.Configuration;
 
@@ -30,7 +30,7 @@ internal sealed class ConfigurationService
     ///     defined.
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="guild" /> is <see langword="null" />.</exception>
-    public GuildConfiguration? GetGuildConfiguration(IGuild guild)
+    public GuildConfiguration? GetGuildConfiguration(DiscordGuild guild)
     {
         ArgumentNullException.ThrowIfNull(guild);
         return _configuration.GetSection(guild.Id.ToString())?.Get<GuildConfiguration>();
@@ -47,7 +47,7 @@ internal sealed class ConfigurationService
     /// <returns>
     ///     <see langword="true" /> if the specified guild has a configuration; otherwise, <see langword="false" />.
     /// </returns>
-    public bool TryGetGuildConfiguration(IGuild guild, [NotNullWhen(true)] out GuildConfiguration? configuration)
+    public bool TryGetGuildConfiguration(DiscordGuild guild, [NotNullWhen(true)] out GuildConfiguration? configuration)
     {
         configuration = null;
 
