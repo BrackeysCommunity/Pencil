@@ -95,7 +95,6 @@ internal sealed class TexCommand : ApplicationCommandModule
 
         var fileName = $"{(spoiler ? "SPOILER_" : "")}output.png";
         var builder = new DiscordInteractionResponseBuilder();
-        builder.AsEphemeral();
         builder.AddFile(fileName, result.ImageStream);
         await context.CreateResponseAsync(builder);
     }
