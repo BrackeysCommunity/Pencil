@@ -4,5 +4,5 @@ namespace Pencil.Data;
 
 internal class Self
 {
-    [JsonPropertyName("href")] public string Href { get; set; }
+    [JsonPropertyName("href")] public string Href { get; set; } = string.Empty;
 }

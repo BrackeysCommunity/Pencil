@@ -1,11 +1,12 @@
-﻿using Discord;
-using Discord.Interactions;
+﻿using DSharpPlus;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Pencil.CommandModules;
+namespace Pencil.Commands;
 
-internal sealed class FormatCodeCommand : InteractionModuleBase<SocketInteractionContext>
+internal sealed class FormatCodeCommand : ApplicationCommandModule
 {
     private static readonly string[] SupportedLanguages =
     {
@@ -17,11 +18,26 @@ internal sealed class FormatCodeCommand : InteractionModuleBase<SocketInteractio
         "sql", "stan", "swift", "tcl", "thrift", "typescript", "vala", "zephir"
     };
 
-    [MessageCommand("Format Code")]
-    [RequireContext(ContextType.Guild)]
-    public async Task FormatCodeAsync(IMessage message)
+    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code")]
+    [SlashRequireGuild]
+    public async Task FormatCodeAsync(ContextMenuContext context)
     {
-        string code = message.Content;
+        string code = context.TargetMessage.Content;
+        string codeblock = await CreateCodeblockAsync(code);
+        await context.CreateResponseAsync(codeblock, true);
+    }
+
+    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code (Public)", false)]
+    [SlashRequireGuild]
+    public async Task FormatCodePublicAsync(ContextMenuContext context)
+    {
+        string code = context.TargetMessage.Content;
+        string codeblock = await CreateCodeblockAsync(code);
+        await context.CreateResponseAsync(codeblock);
+    }
+
+    private static async Task<string> CreateCodeblockAsync(string code)
+    {
         string firstWord = code.Split(' ')[0];
         if (TryDetectLanguage(firstWord, out string language))
         {
@@ -33,8 +49,7 @@ internal sealed class FormatCodeCommand : InteractionModuleBase<SocketInteractio
         SyntaxTree tree = CSharpSyntaxTree.ParseText(trimmedCode);
         SyntaxNode node = (await tree.GetRootAsync()).NormalizeWhitespace();
         string formattedCode = node.ToFullString();
-
-        await RespondAsync($"```{language}\n{formattedCode}\n```", ephemeral: true).ConfigureAwait(false);
+        return $"```{language}\n{formattedCode}\n```";
     }
 
     private static bool TryDetectLanguage(string input, out string language)

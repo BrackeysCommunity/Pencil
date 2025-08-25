@@ -1,12 +1,11 @@
-﻿using Discord;
-using Discord.Interactions;
-using Discord.WebSocket;
+﻿using DSharpPlus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pencil.Services;
 using Serilog;
+using Serilog.Extensions.Logging;
 using X10D.Hosting.DependencyInjection;
 
 Directory.CreateDirectory("data");
@@ -24,18 +23,18 @@ builder.Configuration.AddJsonFile("data/config.json", true, true);
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
-builder.Services.AddSingleton<DiscordSocketClient>();
-builder.Services.AddSingleton<InteractionService>();
-builder.Services.AddSingleton(new DiscordSocketConfig
+builder.Services.AddSingleton<ConfigurationService>();
+builder.Services.AddSingleton(new DiscordClient(new DiscordConfiguration
 {
-    GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
-});
+    Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
+    LoggerFactory = new SerilogLoggerFactory(),
+    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers | DiscordIntents.MessageContents
+}));
 
 builder.Services.AddSingleton<HttpClient>();
 
 builder.Services.AddHostedSingleton<ColorService>();
 builder.Services.AddSingleton<LatexService>();
-builder.Services.AddSingleton<ConfigurationService>();
 builder.Services.AddHostedSingleton<BotService>();
 
 IHost app = builder.Build();
