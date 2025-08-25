@@ -4,7 +4,7 @@ namespace Pencil.Data;
 
 internal class Rgb
 {
-    [JsonPropertyName("fraction")] public Fraction Fraction { get; set; }
+    [JsonPropertyName("fraction")] public Fraction Fraction { get; set; } = new();
 
     [JsonPropertyName("r")] public int R { get; set; }
 
@@ -12,5 +12,5 @@ internal class Rgb
 
     [JsonPropertyName("b")] public int B { get; set; }
 
-    [JsonPropertyName("value")] public string Value { get; set; }
+    [JsonPropertyName("value")] public string Value { get; set; } = string.Empty;
 }

@@ -4,9 +4,9 @@ namespace Pencil.Data;
 
 internal class XYZ
 {
-    [JsonPropertyName("fraction")] public Fraction Fraction { get; set; }
+    [JsonPropertyName("fraction")] public Fraction Fraction { get; set; } = new();
 
-    [JsonPropertyName("value")] public string Value { get; set; }
+    [JsonPropertyName("value")] public string Value { get; set; } = string.Empty;
 
     [JsonPropertyName("X")] public int X { get; set; }
 
