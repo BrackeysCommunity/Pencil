@@ -6,7 +6,7 @@ using Humanizer;
 using Pencil.Services;
 using Color = Discord.Color;
 
-namespace Pencil.CommandModules;
+namespace Pencil.Commands;
 
 /// <summary>
 ///     Represents a class which implements the <c>info</c> command.

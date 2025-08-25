@@ -3,7 +3,7 @@ using Discord.Interactions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Pencil.CommandModules;
+namespace Pencil.Commands;
 
 internal sealed class FormatCodeCommand : InteractionModuleBase<SocketInteractionContext>
 {

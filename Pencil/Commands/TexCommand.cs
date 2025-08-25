@@ -6,7 +6,7 @@ using Pencil.Configuration;
 using Pencil.Services;
 using Color = Discord.Color;
 
-namespace Pencil.CommandModules;
+namespace Pencil.Commands;
 
 /// <summary>
 ///     Represents a class which implements the <c>Render TeX</c> command and <c>/tex</c> slash command.

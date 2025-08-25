@@ -4,7 +4,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pencil.CommandModules;
+using Pencil.Commands;
 
 namespace Pencil.Services;
 

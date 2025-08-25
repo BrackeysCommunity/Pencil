@@ -4,7 +4,7 @@ using Discord.Interactions;
 using Pencil.Services;
 using Color = SixLabors.ImageSharp.Color;
 
-namespace Pencil.CommandModules;
+namespace Pencil.Commands;
 
 internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionContext>
 {
@@ -21,8 +21,7 @@ internal sealed class ColorCommand : InteractionModuleBase<SocketInteractionCont
 
     [SlashCommand("color", "Displays information about a colour.", runMode: RunMode.Async)]
     public async Task ColorAsync(
-        [Summary("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")]
-        string color)
+        [Summary("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
     {
         var query = new Dictionary<string, string>
         {
