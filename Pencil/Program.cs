@@ -1,11 +1,13 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Pencil.Commands;
 using Pencil.Services;
 using Serilog;
-using Serilog.Extensions.Logging;
 using X10D.Hosting.DependencyInjection;
 
 Directory.CreateDirectory("data");
@@ -24,15 +26,18 @@ builder.Logging.ClearProviders();
 builder.Logging.AddSerilog();
 
 builder.Services.AddSingleton<ConfigurationService>();
-builder.Services.AddSingleton(new DiscordClient(new DiscordConfiguration
+
+const DiscordIntents intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents;
+builder.Services.AddDiscordClient(Environment.GetEnvironmentVariable("DISCORD_TOKEN")!, intents);
+builder.Services.AddCommandsExtension((_, commands) =>
 {
-    Token = Environment.GetEnvironmentVariable("DISCORD_TOKEN"),
-    LoggerFactory = new SerilogLoggerFactory(),
-    Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMessages | DiscordIntents.MessageContents
-}));
+    commands.AddCommands<ColorCommand>();
+    commands.AddCommands<FormatCodeCommand>();
+    commands.AddCommands<InfoCommand>();
+    commands.AddCommands<TexCommand>();
+});
 
 builder.Services.AddSingleton<HttpClient>();
-
 builder.Services.AddHostedSingleton<ColorService>();
 builder.Services.AddSingleton<LatexService>();
 builder.Services.AddHostedSingleton<BotService>();

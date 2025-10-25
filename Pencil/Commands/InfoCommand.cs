@@ -1,9 +1,12 @@
-﻿using System.Text;
+﻿using System.ComponentModel;
+using System.Text;
 using DSharpPlus;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using Humanizer;
+using JetBrains.Annotations;
 using Pencil.Extensions;
 using Pencil.Services;
 
@@ -12,7 +15,7 @@ namespace Pencil.Commands;
 /// <summary>
 ///     Represents a class which implements the <c>info</c> command.
 /// </summary>
-internal sealed class InfoCommand : ApplicationCommandModule
+internal sealed class InfoCommand
 {
     private readonly BotService _botService;
 
@@ -25,34 +28,35 @@ internal sealed class InfoCommand : ApplicationCommandModule
         _botService = botService;
     }
 
-    [SlashCommand("info", "Displays information about the bot.")]
-    [SlashRequireGuild]
-    public async Task InfoAsync(InteractionContext context)
+    [Command("info")]
+    [Description("Displays information about the bot.")]
+    [RequireGuild]
+    [UsedImplicitly]
+    public async Task InfoAsync(SlashCommandContext context)
     {
-        DiscordGuild guild = context.Guild;
+        DiscordGuild guild = context.Guild!;
         DiscordClient client = context.Client;
         DiscordMember member = (await client.CurrentUser.GetAsMemberOfAsync(guild))!;
         string botVersion = _botService.Version;
-        DiscordColor embedColor = member.Color;
+        DiscordColor embedColor = member.Color.PrimaryColor;
+        var ping = (int)client.GetConnectionLatency(guild.Id).TotalMilliseconds;
 
         var embed = new DiscordEmbedBuilder();
         embed.WithAuthor(member);
         embed.WithColor(embedColor);
         embed.WithThumbnail(member.AvatarUrl);
         embed.WithTitle($"Pencil v{botVersion}");
-        embed.AddField("Ping", $"{client.Ping} ms", true);
+        embed.AddField("Ping", $"{ping} ms", true);
         embed.AddField("Uptime", (DateTimeOffset.UtcNow - _botService.StartedAt).Humanize(), true);
         embed.AddField("Source", "[View on GitHub](https://github.com/BrackeysCommunity/Pencil)", true);
 
         var builder = new StringBuilder();
         builder.AppendLine($"Pencil: {botVersion}");
         builder.AppendLine($"D#+: {client.VersionString}");
-        builder.AppendLine($"Gateway: {client.GatewayVersion}");
         builder.AppendLine($"CLR: {Environment.Version.ToString(3)}");
         builder.AppendLine($"Host: {Environment.OSVersion}");
 
         embed.AddField("Version", Formatter.BlockCode(builder.ToString()));
-
-        await context.CreateResponseAsync(embed, true);
+        await context.RespondAsync(embed, true);
     }
 }

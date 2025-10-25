@@ -1,12 +1,14 @@
-﻿using DSharpPlus;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
+﻿using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Entities;
+using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Pencil.Commands;
 
-internal sealed class FormatCodeCommand : ApplicationCommandModule
+internal sealed class FormatCodeCommand
 {
     private static readonly string[] SupportedLanguages =
     {
@@ -18,22 +20,28 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         "sql", "stan", "swift", "tcl", "thrift", "typescript", "vala", "zephir"
     };
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code")]
-    [SlashRequireGuild]
-    public async Task FormatCodeAsync(ContextMenuContext context)
+    [Command("Format Code")]
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
+    [RequireGuild]
+    [UsedImplicitly]
+    public static async Task FormatCodeAsync(SlashCommandContext context, DiscordMessage message)
     {
-        string code = context.TargetMessage.Content;
+        await context.DeferResponseAsync(true);
+        string code = message.Content;
         string codeblock = await CreateCodeblockAsync(code);
-        await context.CreateResponseAsync(codeblock, true);
+        await context.EditResponseAsync(codeblock);
     }
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code (Public)", false)]
-    [SlashRequireGuild]
-    public async Task FormatCodePublicAsync(ContextMenuContext context)
+    [Command("Format Code (Public)")]
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
+    [RequireGuild]
+    [UsedImplicitly]
+    public static async Task FormatCodePublicAsync(SlashCommandContext context, DiscordMessage message)
     {
-        string code = context.TargetMessage.Content;
+        await context.DeferResponseAsync(true);
+        string code = message.Content;
         string codeblock = await CreateCodeblockAsync(code);
-        await context.CreateResponseAsync(codeblock);
+        await context.EditResponseAsync(codeblock);
     }
 
     private static async Task<string> CreateCodeblockAsync(string code)

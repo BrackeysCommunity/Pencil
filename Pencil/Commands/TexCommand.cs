@@ -1,7 +1,9 @@
-﻿using System.Text.RegularExpressions;
-using DSharpPlus;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Logging;
 using Pencil.Configuration;
 using Pencil.Services;
@@ -11,7 +13,7 @@ namespace Pencil.Commands;
 /// <summary>
 ///     Represents a class which implements the <c>Render TeX</c> command and <c>/tex</c> slash command.
 /// </summary>
-internal sealed class TexCommand : ApplicationCommandModule
+internal sealed class TexCommand
 {
     private readonly ILogger<TexCommand> _logger;
     private readonly ConfigurationService _configurationService;
@@ -30,15 +32,16 @@ internal sealed class TexCommand : ApplicationCommandModule
         _latexService = latexService;
     }
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Render TeX")]
-    public async Task RenderTexAsync(ContextMenuContext context)
+    [Command("Render TeX")]
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
+    [UsedImplicitly]
+    public async Task RenderTexAsync(SlashCommandContext context, DiscordMessage message)
     {
-        DiscordMessage message = context.TargetMessage;
         string content = message.Content;
 
         if (string.IsNullOrWhiteSpace(content))
         {
-            await context.CreateResponseAsync("This message does not contain any content.", true);
+            await context.RespondAsync("This message does not contain any content.", true);
             return;
         }
 
@@ -51,20 +54,22 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true);
+            await context.RespondAsync(embed, true);
             return;
         }
 
         var builder = new DiscordInteractionResponseBuilder();
         builder.AsEphemeral();
-        builder.AddFile("output.png", result.ImageStream);
-        await context.CreateResponseAsync(builder);
+        builder.AddFile("output.png", result.ImageStream!);
+        await context.RespondAsync(builder);
     }
 
-    [SlashCommand("tex", "Renders a TeX expression.")]
-    public async Task TexCommandAsync(InteractionContext context,
-        [Option("expression", "The expression to render")] string expression,
-        [Option("spoiler", "Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
+    [Command("tex")]
+    [Description("Renders a TeX expression.")]
+    [UsedImplicitly]
+    public async Task TexCommandAsync(SlashCommandContext context,
+        [Parameter("expression"), Description("The expression to render")] string expression,
+        [Parameter("spoiler"), Description("Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
         if (context.Guild is { } guild &&
             _configurationService.TryGetGuildConfiguration(guild, out GuildConfiguration? guildConfiguration))
@@ -73,7 +78,7 @@ internal sealed class TexCommand : ApplicationCommandModule
             {
                 if (Regex.IsMatch(expression, pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
                 {
-                    await context.CreateResponseAsync("The expression contains a filtered word.", true);
+                    await context.RespondAsync("The expression contains a filtered word.", true);
                     return;
                 }
             }
@@ -89,13 +94,13 @@ internal sealed class TexCommand : ApplicationCommandModule
             embed.WithTitle("Error displaying TeX");
             embed.WithDescription($"```\n{result.ErrorMessage}\n```");
 
-            await context.CreateResponseAsync(embed, true);
+            await context.RespondAsync(embed, true);
             return;
         }
 
         var fileName = $"{(spoiler ? "SPOILER_" : "")}output.png";
         var builder = new DiscordInteractionResponseBuilder();
-        builder.AddFile(fileName, result.ImageStream);
-        await context.CreateResponseAsync(builder);
+        builder.AddFile(fileName, result.ImageStream!);
+        await context.RespondAsync(builder);
     }
 }
