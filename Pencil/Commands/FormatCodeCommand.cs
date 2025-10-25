@@ -1,13 +1,18 @@
-﻿using DSharpPlus;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
+﻿using DSharpPlus.Commands;
+using DSharpPlus.Commands.ContextChecks;
+using DSharpPlus.Commands.Processors.SlashCommands;
+using DSharpPlus.Entities;
+using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 
 namespace Pencil.Commands;
 
-internal sealed class FormatCodeCommand : ApplicationCommandModule
+internal sealed class FormatCodeCommand
 {
+    private readonly ILogger<FormatCodeCommand> _logger;
+
     private static readonly string[] SupportedLanguages =
     {
         "actionscript", "angelscript", "arcade", "arduino", "aspectj", "autohotkey", "autoit", "cal", "capnproto", "ceylon",
@@ -18,22 +23,39 @@ internal sealed class FormatCodeCommand : ApplicationCommandModule
         "sql", "stan", "swift", "tcl", "thrift", "typescript", "vala", "zephir"
     };
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code")]
-    [SlashRequireGuild]
-    public async Task FormatCodeAsync(ContextMenuContext context)
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="FormatCodeCommand" /> class.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    public FormatCodeCommand(ILogger<FormatCodeCommand> logger)
     {
-        string code = context.TargetMessage.Content;
-        string codeblock = await CreateCodeblockAsync(code);
-        await context.CreateResponseAsync(codeblock, true);
+        _logger = logger;
     }
 
-    [ContextMenu(ApplicationCommandType.MessageContextMenu, "Format Code (Public)", false)]
-    [SlashRequireGuild]
-    public async Task FormatCodePublicAsync(ContextMenuContext context)
+    [Command("Format Code")]
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
+    [RequireGuild]
+    [UsedImplicitly]
+    public async Task FormatCodeAsync(SlashCommandContext context, DiscordMessage message)
     {
-        string code = context.TargetMessage.Content;
+        _logger.LogInformation("{User} requested code formatting {Message}", context.User, message);
+        await context.DeferResponseAsync(true);
+        string code = message.Content;
         string codeblock = await CreateCodeblockAsync(code);
-        await context.CreateResponseAsync(codeblock);
+        await context.EditResponseAsync(codeblock);
+    }
+
+    [Command("Format Code (Public)")]
+    [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
+    [RequireGuild]
+    [UsedImplicitly]
+    public async Task FormatCodePublicAsync(SlashCommandContext context, DiscordMessage message)
+    {
+        _logger.LogInformation("{User} requested public code formatting {Message}", context.User, message);
+        await context.DeferResponseAsync(true);
+        string code = message.Content;
+        string codeblock = await CreateCodeblockAsync(code);
+        await context.EditResponseAsync(codeblock);
     }
 
     private static async Task<string> CreateCodeblockAsync(string code)

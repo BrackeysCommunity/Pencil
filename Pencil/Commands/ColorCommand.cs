@@ -1,13 +1,16 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
+using DSharpPlus.Commands;
+using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands;
+using JetBrains.Annotations;
 using Pencil.Data;
 using Pencil.Services;
 using Color = SixLabors.ImageSharp.Color;
 
 namespace Pencil.Commands;
 
-internal sealed class ColorCommand : ApplicationCommandModule
+internal sealed class ColorCommand
 {
     private readonly ColorService _colorService;
 
@@ -20,9 +23,11 @@ internal sealed class ColorCommand : ApplicationCommandModule
         _colorService = colorService;
     }
 
-    [SlashCommand("color", "Displays information about a colour.")]
-    public async Task ColorAsync(InteractionContext context,
-        [Option("color", "The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
+    [Command("color")]
+    [Description("Displays information about a colour.")]
+    [UsedImplicitly]
+    public async Task ColorAsync(SlashCommandContext context,
+        [Parameter("color"), Description("The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
     {
         var query = new Dictionary<string, string>
         {
@@ -51,11 +56,11 @@ internal sealed class ColorCommand : ApplicationCommandModule
         }
         else
         {
-            await context.CreateResponseAsync("Invalid color", true);
+            await context.RespondAsync("Invalid color", true);
             return;
         }
 
-        await context.DeferAsync();
+        await context.DeferResponseAsync();
 
         var builder = new DiscordWebhookBuilder();
         Response? response = await _colorService.GetColorInformation(query);
