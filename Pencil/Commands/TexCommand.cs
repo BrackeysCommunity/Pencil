@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.RegularExpressions;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.Processors.SlashCommands;
@@ -37,6 +37,7 @@ internal sealed class TexCommand
     [UsedImplicitly]
     public async Task RenderTexAsync(SlashCommandContext context, DiscordMessage message)
     {
+        _logger.LogInformation("{User} requested TeX render for {Message}", context.User, message);
         string content = message.Content;
 
         if (string.IsNullOrWhiteSpace(content))
@@ -71,6 +72,7 @@ internal sealed class TexCommand
         [Parameter("expression"), Description("The expression to render")] string expression,
         [Parameter("spoiler"), Description("Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
     {
+        _logger.LogInformation("{User} rendered TeX: {Expression} (spoiler: {Spoiler})", context.User, expression, spoiler);
         if (context.Guild is { } guild &&
             _configurationService.TryGetGuildConfiguration(guild, out GuildConfiguration? guildConfiguration))
         {

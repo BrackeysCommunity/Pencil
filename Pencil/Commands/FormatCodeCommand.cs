@@ -5,11 +5,14 @@ using DSharpPlus.Entities;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.Extensions.Logging;
 
 namespace Pencil.Commands;
 
 internal sealed class FormatCodeCommand
 {
+    private readonly ILogger<FormatCodeCommand> _logger;
+
     private static readonly string[] SupportedLanguages =
     {
         "actionscript", "angelscript", "arcade", "arduino", "aspectj", "autohotkey", "autoit", "cal", "capnproto", "ceylon",
@@ -20,12 +23,22 @@ internal sealed class FormatCodeCommand
         "sql", "stan", "swift", "tcl", "thrift", "typescript", "vala", "zephir"
     };
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="FormatCodeCommand" /> class.
+    /// </summary>
+    /// <param name="logger">The logger.</param>
+    public FormatCodeCommand(ILogger<FormatCodeCommand> logger)
+    {
+        _logger = logger;
+    }
+
     [Command("Format Code")]
     [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
     [RequireGuild]
     [UsedImplicitly]
-    public static async Task FormatCodeAsync(SlashCommandContext context, DiscordMessage message)
+    public async Task FormatCodeAsync(SlashCommandContext context, DiscordMessage message)
     {
+        _logger.LogInformation("{User} requested code formatting {Message}", context.User, message);
         await context.DeferResponseAsync(true);
         string code = message.Content;
         string codeblock = await CreateCodeblockAsync(code);
@@ -36,8 +49,9 @@ internal sealed class FormatCodeCommand
     [SlashCommandTypes(DiscordApplicationCommandType.MessageContextMenu)]
     [RequireGuild]
     [UsedImplicitly]
-    public static async Task FormatCodePublicAsync(SlashCommandContext context, DiscordMessage message)
+    public async Task FormatCodePublicAsync(SlashCommandContext context, DiscordMessage message)
     {
+        _logger.LogInformation("{User} requested public code formatting {Message}", context.User, message);
         await context.DeferResponseAsync(true);
         string code = message.Content;
         string codeblock = await CreateCodeblockAsync(code);
