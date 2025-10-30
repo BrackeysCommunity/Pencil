@@ -27,7 +27,8 @@ internal sealed class ColorCommand
     [Description("Displays information about a colour.")]
     [UsedImplicitly]
     public async Task ColorAsync(SlashCommandContext context,
-        [Parameter("color"), Description("The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color)
+        [Parameter("color"), Description("The color to display. This may be hex / decimal, RGB, HSL, or CMYK.")] string color,
+        [Parameter("mention"), Description("The user to mention.")] DiscordUser? mentionUser = null)
     {
         var query = new Dictionary<string, string>
         {
@@ -91,6 +92,12 @@ internal sealed class ColorCommand
         {
             embed.AddField("Closest Named Color", response.Name.Value, true);
             embed.AddField("Closest Named Hex", response.Name.ClosestNamedHex, true);
+        }
+
+        if (mentionUser is not null)
+        {
+            builder.WithContent(mentionUser.Mention);
+            builder.AddMention(new UserMention(mentionUser));
         }
 
         builder.AddEmbed(embed);

@@ -70,7 +70,8 @@ internal sealed class TexCommand
     [UsedImplicitly]
     public async Task TexCommandAsync(SlashCommandContext context,
         [Parameter("expression"), Description("The expression to render")] string expression,
-        [Parameter("spoiler"), Description("Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false)
+        [Parameter("spoiler"), Description("Whether to render this image as a spoiler. Defaults to false.")] bool spoiler = false,
+        [Parameter("mention"), Description("The user to mention.")] DiscordUser? mentionUser = null)
     {
         _logger.LogInformation("{User} rendered TeX: {Expression} (spoiler: {Spoiler})", context.User, expression, spoiler);
         if (context.Guild is { } guild &&
@@ -102,6 +103,13 @@ internal sealed class TexCommand
 
         var fileName = $"{(spoiler ? "SPOILER_" : "")}output.png";
         var builder = new DiscordInteractionResponseBuilder();
+
+        if (mentionUser is not null)
+        {
+            builder.WithContent(mentionUser.Mention);
+            builder.AddMention(new UserMention(mentionUser));
+        }
+
         builder.AddFile(fileName, result.ImageStream!);
         await context.RespondAsync(builder);
     }
